@@ -36,7 +36,7 @@ class RBACMap(list):
             if value is None:
                 config = IRawRBACPermissionConfig()
             else:
-                config = IRawRBACPermissionConfig(**value)
+                config = IRawRBACPermissionConfig.from_rbac_map(**value)
 
             result.append(IRawRBACPermission(permission=full_key, config=config))
 

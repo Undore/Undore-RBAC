@@ -3,7 +3,7 @@ from typing import Union
 
 from ascender.core.di.injectfn import inject
 
-from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission
+from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
 from shared.rbac.types.rbac_map import RBACMap
 
 
@@ -80,20 +80,32 @@ class RBACGate:
 
         Takes in account permission values and role priority overrides
         This means, that permission values will be sorted in this order:
-        1. Role (shared) permissions: Ones with the highest role priority are the last, if same - last one is the newest
-        2. User permissions
-        Last permissions override previous, so user permissions are the highest priority
+        1. Child permissions: Permissions, defined as child permissions in RBAC Map for parent permission, which user has
+        2. Role (shared) permissions: Ones with the highest role priority are the last, if same - last one is the newest
+        3. User permissions
+        Last permissions override previous, so user permissions are the highest priority and child permissions are the lowest (priority)
         The higher is group priority, the more important it is (in sense of overrides)
 
         Calculated only once to save performance. Use update_overrides to update this.
 
+        :raises ValueError: If permission is invalid
         :return: Dict of [permission, value]
         """
 
         scoped_permissions: list[IRBACPermission] = []
-        shared_permissions = []
+        shared_permissions: list[IRBACPermission] = []
+        child_permissions: list[IRBACChildPermission] = []
 
         for permission in self.__user_permissions:
+            permission: IRBACPermission
+
+            map_permission = self.rbac_map.find(permission.permission)
+            if not map_permission and not permission.permission.endswith("*"):
+                raise ValueError(f"Permission {permission.permission} not found in RBAC Map")
+            elif map_permission:
+                print(map_permission.config.children)
+                child_permissions.extend(map_permission.config.children)
+
             if permission.user_id:
                 scoped_permissions.append(permission)
             elif permission.role_id:
@@ -108,25 +120,55 @@ class RBACGate:
         scoped_permissions_copy = scoped_permissions.copy()
         scoped_permissions.sort(key=lambda permission: permission.created_at, reverse=True)
 
-
         if scoped_permissions_copy != scoped_permissions:
             raise RuntimeError("IRBACPermissions must be sorted by created_at (Newer ones first). Please, implement this in your manager")
 
-        overrides: list[tuple[str, bool]] = []
+        permissions_sorted: list[tuple[str, bool]] = []
 
         # Combine and override all permissions with the highest priority values
-        for permission in shared_permissions + scoped_permissions:
+        for permission in child_permissions + shared_permissions + scoped_permissions:
             permission: IRBACPermission
 
-            overrides_permissions = [i[0] for i in overrides]
-            if permission.permission in overrides_permissions:
+            raw_permissions = [i[0] for i in permissions_sorted]
+            if permission.permission in raw_permissions:
                 continue
 
-            overrides.append((permission.permission, permission.value))
+            permissions_sorted.append((permission.permission, permission.value))
 
-        return overrides
+        return permissions_sorted
 
-    def check_permission_overriding(self, required_permission: str, overrides: list[tuple[str, bool]]) -> bool | None:
+    def compare(self, required_permission: str) -> bool:
+        """
+        Checks if user has specific permission.
+        Takes overrides, values, roles, permission configs and priorities into account
+
+        :raises ValueError: If permission is not present in RBAC Map
+        :param required_permission: RBAC Permission to check
+        :return: True if access granted, otherwise False
+        """
+
+        if not (_permission := self.rbac_map.find(required_permission)):
+            raise ValueError(f"Permission {required_permission} is not present in RBAC Map")
+
+        _permission: IRawRBACPermission
+
+        if not _permission.config.explicit:
+            # Do not check overrides, if explicit permission
+
+            override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
+
+            override = self.__check_permission_overriding(required_permission, override_permissions)
+            if override is not None:
+                return override
+
+
+        if self.user_permissions_dict.get(_permission.permission, _permission.config.default):
+            return True
+
+        return False
+
+
+    def __check_permission_overriding(self, required_permission: str, overrides: list[tuple[str, bool]]) -> bool | None:
         """
         Applies overrides (permissions ending with *, overriding children permissions as True)
         to certain permission to check if any of the overrides cover this permission
@@ -173,33 +215,3 @@ class RBACGate:
                     break
 
         return None
-
-    def compare(self, required_permission: str) -> bool:
-        """
-        Checks if user has specific permission.
-        Takes overrides, values, roles, permission configs and priorities into account
-
-        :raises ValueError: If permission is not present in RBAC Map
-        :param required_permission: RBAC Permission to check
-        :return: True if access granted, otherwise False
-        """
-
-        if not (_permission := self.rbac_map.find(required_permission)):
-            raise ValueError(f"Permission {required_permission} is not present in RBAC Map")
-
-        _permission: IRawRBACPermission
-
-        if not _permission.config.explicit:
-            # Do not check overrides, if explicit permission
-
-            override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
-
-            override = self.check_permission_overriding(required_permission, override_permissions)
-            if override is not None:
-                return override
-
-
-        if self.user_permissions_dict.get(_permission.permission, _permission.config.default):
-            return True
-
-        return False

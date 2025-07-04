@@ -62,7 +62,7 @@ class BaseRBACManager(ABC):
         Get role ids for specific user id
         Used by RBAC to save DB requests when full info is not needed
 
-        Example for Tortoise, using Q:
+        Example for Tortoise:
 
         async def get_user_role_ids(self, user_id: str) -> list[int]:
             return [i.role_id for i in await UserRoles.filter(user_id=user_id)]

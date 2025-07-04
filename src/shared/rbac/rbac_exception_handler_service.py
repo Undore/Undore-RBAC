@@ -9,7 +9,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from shared.rbac.logger import init_logger
-from shared.rbac.exceptions import RBACException
+from shared.rbac.exceptions import RBACHTTPException
 from shared.rbac.services.rbac_service import RbacService
 
 
@@ -21,10 +21,10 @@ class RbacExceptionHandlerService(Service):
         self.app = application
 
 
-        self.app.app.add_exception_handler(RBACException, self.handle)
+        self.app.app.add_exception_handler(RBACHTTPException, self.handle)
 
     async def handle(self, request: Request, exc: Exception):
-        if not isinstance(exc, RBACException):
+        if not isinstance(exc, RBACHTTPException):
             return None
 
         user_id = None

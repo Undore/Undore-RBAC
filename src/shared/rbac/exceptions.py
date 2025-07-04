@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from starlette.requests import Request
 
 
-class RBACException(HTTPException):
+class RBACHTTPException(HTTPException):
     def __init__(self, status_code: int, detail: str, headers: dict[str, Any] = None, **kwargs):
         self.status_code = status_code
         self.detail = detail
@@ -15,7 +15,7 @@ class RBACException(HTTPException):
         return f"RBAC Exception {self.status_code}: {self.detail}"
 
     def __repr__(self):
-        return f"<RBACException {self.status_code}: {self.detail}>"
+        return f"<RBACHTTPException {self.status_code}: {self.detail}>"
 
     def __dict__(self):
         return {
@@ -27,7 +27,7 @@ class RBACException(HTTPException):
 
 
 
-class InsufficientPermissions(RBACException):
+class InsufficientPermissions(RBACHTTPException):
     def __init__(self, request: Request, required_permission: str):
         self.missing_permission = required_permission
         self.request = request
