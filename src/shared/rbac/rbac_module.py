@@ -1,11 +1,13 @@
+from ascender.contrib.middlewares import useMiddlewares
 from ascender.core import AscModule
 from ascender.core.applications.application import Application
 from ascender.core.di.interface.provider import Provider
 
 from shared.rbac.interfaces.config import RBACConfig
-from shared.rbac.rbac_service import RbacService
+from shared.rbac.rbac_exception_handler_service import RbacExceptionHandlerService
+from shared.rbac.services.rbac_service import RbacService
 
-#
+
 #
 #   ,999,         99  ,999, ,9999999,   ,999999999999,      _,999999,_      ,99999999999,      ,9999999,
 #  dP''Y84        88 dP''Y8,8P'''''Y8b dP'''88''''''Y8b,  ,d8P''d8P'Y8b,   dP'''88''''''Y8,  ,dP''''''Y8b
@@ -28,20 +30,26 @@ from shared.rbac.rbac_service import RbacService
 #       88      '8i      88      ,8PdP'  ,8P      Y8  Y8,
 #       88       Yb,     88_____,d8'Yb,_,dP       '8b,'Yb4,,_____,
 #       88        Y8    88888888P'   'Y8P'         'Y8  ''Y8888888
-
+#
 
 @AscModule(
     imports=[],
     declarations=[],
-    providers=[],
+    providers=[RbacService],
     exports=[]
 )
 class RbacModule:
     @staticmethod
     def for_root(config: RBACConfig) -> Provider:
+        useMiddlewares()
         return [
             {
                 "provide": RbacService,
                 "use_factory": lambda application: RbacService(application, config),
-                "deps": [Application]}
+                "deps": [Application]
+            },
+            {
+                "provide": "ExceptionHandler",
+                "use_class": RbacExceptionHandlerService
+            }
         ]

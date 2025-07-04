@@ -4,12 +4,14 @@ version = "0.1.0"
 description = "RBAC System for Ascender Framework from Undore!"
 authors = ["Undore <github.com/Undore>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"
 ascender-framework = "^2.0rc6"
 pyyaml = "^6.0.2"
 pyjwt = "^2.10.1"
+ascender = "^0.2.0"
 
 
 [build-system]

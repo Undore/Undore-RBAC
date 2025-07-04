@@ -55,3 +55,19 @@ class BaseRBACManager(ABC):
         :return: List of IRBACRole
         """
         ...
+
+    @abstractmethod
+    async def get_user_role_ids(self, user_id: str) -> list[int]:
+        """
+        Get role ids for specific user id
+        Used by RBAC to save DB requests when full info is not needed
+
+        Example for Tortoise, using Q:
+
+        async def get_user_role_ids(self, user_id: str) -> list[int]:
+            return [i.role_id for i in await UserRoles.filter(user_id=user_id)]
+
+        :param user_id: User id to search roles for
+        :return: List of role IDs
+        """
+        ...

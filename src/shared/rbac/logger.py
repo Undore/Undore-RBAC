@@ -1,10 +1,11 @@
 import logging
+from typing import Literal
 
 import click
 from rich.logging import RichHandler
 
 
-def init_logger(level: str):
+def init_logger(level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] | None):
     logging.basicConfig(
         level=level,
         format='',
