@@ -103,8 +103,8 @@ class RBACGate:
             if not map_permission and not permission.permission.endswith("*"):
                 raise ValueError(f"Permission {permission.permission} not found in RBAC Map")
             elif map_permission:
-                print(map_permission.config.children)
-                child_permissions.extend(map_permission.config.children)
+                if map_permission.config.children is not None:
+                    child_permissions.extend(map_permission.config.children)
 
             if permission.user_id:
                 scoped_permissions.append(permission)
@@ -147,6 +147,7 @@ class RBACGate:
         :return: True if access granted, otherwise False
         """
 
+        # noinspection PyTypeChecker
         if not (_permission := self.rbac_map.find(required_permission)):
             raise ValueError(f"Permission {required_permission} is not present in RBAC Map")
 
@@ -204,7 +205,7 @@ class RBACGate:
                     # p_index here is the index of current part, which is *
                     # To compare previous override level (index) to required_permission parts,
                     # subtract 1 from p_index, but total_permission_parts also requires subtracting 1
-                    # to account for length being +1 of index length, so there is two -1 on both sides and they just equalise
+                    # to account for length being +1 of index length, so there is two -1 on both sides and they just equalize
 
                     # Basically, the ride side of this comparison could look like this:
                     # (p_index - 1) <= (total_permission_parts - 1)

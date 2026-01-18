@@ -1,5 +1,5 @@
 import logging
-from typing import Literal
+from typing import Literal, cast
 
 import click
 from rich.logging import RichHandler
@@ -40,6 +40,6 @@ def init_logger(level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] 
     handler = RichHandler(rich_tracebacks=True, tracebacks_suppress=[click], omit_repeated_times=False, markup=True)
     handler.setFormatter(Formatter(prefix))
 
-    logger = logging.Logger(prefix, level=level)
+    logger = logging.Logger(prefix, level=cast(str, level))
     logger.addHandler(handler)
     return logger

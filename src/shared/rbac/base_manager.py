@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-import jwt
-
 from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 
