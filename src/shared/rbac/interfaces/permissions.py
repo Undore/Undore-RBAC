@@ -47,7 +47,7 @@ class IRawRBACPermission(BaseModel):
 
 
 class IRBACPermission(BaseModel):
-    id: int
+    id: str
     permission: str
     user_id: Optional[str] = None
     role_id: Optional[str] = None
