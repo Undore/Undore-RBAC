@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 
 from pydantic import BaseModel
 
@@ -47,14 +47,14 @@ class IRawRBACPermission(BaseModel):
 
 
 class IRBACPermission(BaseModel):
-    id: str
+    id: Any
     permission: str
-    user_id: Optional[str] = None
-    role_id: Optional[str] = None
+    user_id: Optional[Any] = None
+    role_id: Optional[Any] = None
     value: bool
     created_at: datetime
 
 
 class IRBACRole(BaseModel):
-    id: str
+    id: Any
     priority: int

@@ -20,7 +20,6 @@ class RbacExceptionHandlerService(Service):
     def __init__(self, application: Application):
         self.app = application
 
-
         self.app.app.add_exception_handler(RBACHTTPException, self.handle)
 
     async def handle(self, request: Request, exc: Exception):

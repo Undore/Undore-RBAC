@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
@@ -14,7 +15,7 @@ class BaseRBACManager(ABC):
         ...
 
     @abstractmethod
-    async def filter_permissions(self, user_id: str = None, role_ids: list[str] = None) -> list[IRBACPermission]:
+    async def filter_permissions(self, user_id: Any = None, role_ids: list[Any] = None) -> list[IRBACPermission]:
         """
         Find permissions by matching user_id or some of role_ids
         Must search using OR filtering to gather all matching results
@@ -37,7 +38,7 @@ class BaseRBACManager(ABC):
         ...
 
     @abstractmethod
-    async def get_user_roles(self, user_id: str) -> list[IRBACRole]:
+    async def get_user_roles(self, user_id: Any) -> list[IRBACRole]:
         """
         Get roles for specific user id
 
@@ -55,7 +56,7 @@ class BaseRBACManager(ABC):
         ...
 
     @abstractmethod
-    async def get_user_role_ids(self, user_id: str) -> list[int]:
+    async def get_user_role_ids(self, user_id: Any) -> list[Any]:
         """
         Get role ids for specific user id
         Used by RBAC to save DB requests when full info is not needed

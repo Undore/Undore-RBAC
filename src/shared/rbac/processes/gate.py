@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Union
+from typing import Union, Any
 
 from ascender.core.di.injectfn import inject
 
@@ -23,7 +23,7 @@ class RBACGate:
         self.rbac_map = rbac_map
 
     @classmethod
-    async def from_user_id(cls, user_id: str) -> "RBACGate":
+    async def from_user_id(cls, user_id: Any) -> "RBACGate":
         from shared.rbac.services.rbac_service import RbacService
 
         rbac_service = inject(RbacService)
