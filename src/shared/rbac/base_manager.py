@@ -23,7 +23,7 @@ class BaseRBACManager(ABC):
         ...
 
     @abstractmethod
-    async def fetch_user_access(self, user_id: Any = None) -> Access:
+    async def fetch_user_access(self, user_id: Any) -> Access:
         """
         Fetch users' permissions, permissions of users' roles and users' roles in one request
         (Allowing for joined requests and optimization)
