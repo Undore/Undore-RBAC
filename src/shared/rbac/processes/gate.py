@@ -29,8 +29,9 @@ class RBACGate:
         rbac_service = inject(RbacService)
         rbac_manager = rbac_service.rbac_manager
 
-        user_roles: list[IRBACRole] = await rbac_manager.get_user_roles(user_id)
-        user_permissions: list[IRBACPermission] = await rbac_manager.filter_permissions(user_id, [i.id for i in user_roles])
+        user_access = await rbac_manager.fetch_user_access(user_id)
+        user_roles: list[IRBACRole] = user_access['roles']
+        user_permissions: list[IRBACPermission] = user_access['permissions']
 
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map)
 

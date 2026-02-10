@@ -1,16 +1,40 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, TypedDict
 
 from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
+class Access(TypedDict):
+    permissions: list[IRBACPermission]
+    roles: list[IRBACRole]
 
 class BaseRBACManager(ABC):
+    """
+    Base class for RBAC custom manager.
+    See /shared/custom_rbac_manager.py for example
+    """
+
     @abstractmethod
     async def authorize(self, token: str) -> str:
         """
         Decode authentication token and return user id
         :param token: Authentication token
         :return: User id
+        """
+        ...
+
+    @abstractmethod
+    async def fetch_user_access(self, user_id: Any = None) -> Access:
+        """
+        Fetch users' permissions, permissions of users' roles and users' roles in one request
+        (Allowing for joined requests and optimization)
+
+        WARNING: Make sure to also fetch permissions of users' roles, not only users' permissions
+
+        See docs on self.filter_permissions and self.get_user_roles for
+        proper permission filtering description
+
+        :param user_id: User ID To fetch permissions and roles for
+        :return:
         """
         ...
 
