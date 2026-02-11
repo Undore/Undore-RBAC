@@ -21,7 +21,7 @@ appBootstrap: IBootstrap = {
         RbacModule.for_root(
             RBACConfig(
                 rbac_manager=CustomRBACManager,
-                rbac_map_path=os.path.join(BASE_PATH, "rbac_map.yml"),
+                rbac_map_path=os.path.join(BASE_PATH, "rbac_map.yml")
             )),
         provideRouter(routes),
         provideDatabase(ORMEnum.TORTOISE, DATABASE_CONNECTION)

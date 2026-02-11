@@ -44,6 +44,10 @@ class RbacModule:
         useMiddlewares()
         return [
             {
+                "provide": RBACConfig,
+                "use_factory": lambda: config
+            },
+            {
                 "provide": RbacService,
                 "use_factory": lambda application: RbacService(application, config),
                 "deps": [Application]
