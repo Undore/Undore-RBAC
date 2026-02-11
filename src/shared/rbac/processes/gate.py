@@ -17,10 +17,20 @@ class RBACGate:
     for changes to take effect. Roles and permissions properties are strictly read-only.
     """
 
-    def __init__(self, *, user_permissions: list[IRBACPermission], user_roles: list[IRBACRole], rbac_map: RBACMap):
+    def __init__(self, *, user_permissions: list[IRBACPermission], user_roles: list[IRBACRole], rbac_map: RBACMap, custom_user: Any | None):
         self.__user_permissions = user_permissions
         self.__user_roles = user_roles
+        self.__custom_user: Any | None = custom_user
         self.rbac_map = rbac_map
+
+    @property
+    def user(self) -> Any | None:
+        """
+        Returns a custom User Object, if invoked in Access TypedDict within rbac_manager.fetch_user_access
+        For this to work, make sure to provide user in Access TypedDict, when fetching user access in a custom RBAC Manager
+        :return: Custom User Object (any) or None, if not provided in RBAC Custom Manager
+        """
+        return self.__custom_user
 
     @classmethod
     async def from_user_id(cls, user_id: Any) -> "RBACGate":
@@ -32,6 +42,7 @@ class RBACGate:
         user_access = await rbac_manager.fetch_user_access(user_id)
         user_roles: list[IRBACRole] = user_access['roles']
         user_permissions: list[IRBACPermission] = user_access['permissions']
+        user: Any | None = user_access['user']
 
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map)
 
