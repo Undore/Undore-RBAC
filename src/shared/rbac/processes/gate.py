@@ -17,7 +17,7 @@ class RBACGate:
     for changes to take effect. Roles and permissions properties are strictly read-only.
     """
 
-    def __init__(self, *, user_permissions: list[IRBACPermission], user_roles: list[IRBACRole], rbac_map: RBACMap, custom_user: Any | None):
+    def __init__(self, *, user_permissions: list[IRBACPermission], user_roles: list[IRBACRole], rbac_map: RBACMap, custom_user: Any | None = None):
         self.__user_permissions = user_permissions
         self.__user_roles = user_roles
         self.__custom_user: Any | None = custom_user
@@ -44,7 +44,7 @@ class RBACGate:
         user_permissions: list[IRBACPermission] = user_access['permissions']
         user: Any | None = user_access['user']
 
-        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map)
+        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
     @cached_property
     def user_roles(self) -> dict[str, IRBACRole]:
