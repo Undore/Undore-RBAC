@@ -6,7 +6,7 @@ from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole
 class Access(TypedDict):
     permissions: list[IRBACPermission]
     roles: list[IRBACRole]
-    user: Any | None  # Not used in RBAC, but this can be utilized to save requests
+    user: Any | None  # Optional: not used within UndoreRBAC, but can be utilized to save requests
 
 class BaseRBACManager(ABC):
     """
