@@ -14,7 +14,8 @@ class CustomRBACManager(BaseRBACManager):
         user_roles = await self.get_user_roles(user_id)
         return {
             "permissions": await self.filter_permissions(user_id=user_id, role_ids=[i.id for i in user_roles]),
-            "roles": user_roles
+            "roles": user_roles,
+            "user": None
         }
 
     async def authorize(self, token: str) -> str:

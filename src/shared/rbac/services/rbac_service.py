@@ -39,7 +39,7 @@ class RbacService(Service):
 
         self.request_scope = contextvars.ContextVar("request_token")
 
-        self.rbac_manager: BaseRBACManager = config.rbac_manager()
+        self.rbac_manager: BaseRBACManager = config.rbac_manager
         self.rbac_map = RBACMap(self.config.rbac_map_path)
 
         self.application.app.add_event_handler("startup", self.on_startup)
