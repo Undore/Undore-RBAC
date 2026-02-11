@@ -47,17 +47,19 @@ class RbacService(Service):
     def on_startup(self):
         self.logger = init_logger(self.config.log_level)
 
-    async def check_access(self, request: Request, user_id: str, permissions: Sequence[str]) -> 'RBACGate':
+    async def check_access(self, request: Request, user_id: str, permissions: Sequence[str]) -> RBACGate:
         """
         Check if user has specific permissions and raise an exception if not
 
         This method is used automatically by RBAC Guard.
         It is highly recommended to use RBACGate (can be initialized from user object) instead for permission checks in external ascender modules.
 
+        RBACGate can contain a custom user object. See gate.user docs for info
+
         :param request: Starlette Request object
         :param user_id: User ID to check
         :param permissions: Required permissions in RBACMap format (for example: test.modify)
-        :return: Initialized User RBAC Gate if success
+        :return: Initialized User RBAC Gate if success.
         """
         from shared.rbac.processes.gate import RBACGate
 
