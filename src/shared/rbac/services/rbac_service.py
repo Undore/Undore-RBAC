@@ -19,6 +19,7 @@ from shared.rbac.types.rbac_map import RBACMap
 
 if TYPE_CHECKING:
     from shared.rbac.rbac_exception_handler_service import RbacExceptionHandlerService
+    from shared.rbac.processes.gate import RBACGate
 
 
 @Injectable()
@@ -46,7 +47,7 @@ class RbacService(Service):
     def on_startup(self):
         self.logger = init_logger(self.config.log_level)
 
-    async def check_access(self, request: Request, user_id: str, permissions: Sequence[str]) -> bool:
+    async def check_access(self, request: Request, user_id: str, permissions: Sequence[str]) -> 'RBACGate':
         """
         Check if user has specific permissions and raise an exception if not
 
@@ -56,7 +57,7 @@ class RbacService(Service):
         :param request: Starlette Request object
         :param user_id: User ID to check
         :param permissions: Required permissions in RBACMap format (for example: test.modify)
-        :return: True if success
+        :return: Initialized User RBAC Gate if success
         """
         from shared.rbac.processes.gate import RBACGate
 
@@ -68,7 +69,6 @@ class RbacService(Service):
             if not gate.compare(permission):
                 raise InsufficientPermissions(request, permission)
 
-
         self.logger.info(f"[green]Access granted for user id={user_id}")
 
-        return True
+        return gate
