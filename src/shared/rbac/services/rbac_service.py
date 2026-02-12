@@ -69,7 +69,7 @@ class RbacService(Service):
 
         for permission in permissions:
             if not gate.compare(permission):
-                raise InsufficientPermissions(request, permission)
+                raise InsufficientPermissions(request, (permission if self.config.expose_missing_permission else None))
 
         self.logger.info(f"[green]Access granted for user id={user_id}")
 

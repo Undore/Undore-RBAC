@@ -123,7 +123,7 @@ class RBACGate:
             if not map_permission and not permission.permission.endswith("*"):
                 raise ValueError(f"Permission {permission.permission} not found in RBAC Map")
             elif map_permission:
-                if map_permission.config.children is not None:
+                if map_permission.config.children is not None and permission.value is True:
                     child_permissions.extend(map_permission.config.children)
 
             if permission.user_id:
