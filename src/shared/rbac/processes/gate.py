@@ -3,7 +3,9 @@ from typing import Union, Any
 
 from ascender.core.di.injectfn import inject
 
+from shared.rbac.base_manager import Access
 from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
+from shared.rbac.services.rbac_service import RbacService
 from shared.rbac.types.rbac_map import RBACMap
 
 
@@ -16,6 +18,7 @@ class RBACGate:
     Keep in mind that if permissions changed, you need to update overrides using the method update_overrides
     for changes to take effect. Roles and permissions properties are strictly read-only.
     """
+    rbac_service: RbacService = inject(RbacService)
 
     def __init__(self, *, user_permissions: list[IRBACPermission], user_roles: list[IRBACRole], rbac_map: RBACMap, custom_user: Any | None = None):
         self.__user_permissions = user_permissions
@@ -34,17 +37,22 @@ class RBACGate:
 
     @classmethod
     async def from_user_id(cls, user_id: Any) -> "RBACGate":
-        from shared.rbac.services.rbac_service import RbacService
-
-        rbac_service = inject(RbacService)
-        rbac_manager = rbac_service.rbac_manager
+        rbac_manager = cls.rbac_service.rbac_manager
 
         user_access = await rbac_manager.fetch_user_access(user_id)
         user_roles: list[IRBACRole] = user_access['roles']
         user_permissions: list[IRBACPermission] = user_access['permissions']
         user: Any | None = user_access['user']
 
-        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
+        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=cls.rbac_service.rbac_map, custom_user=user)
+
+    @classmethod
+    async def from_access(cls, access: Access) -> "RBACGate":
+        user_roles: list[IRBACRole] = access['roles']
+        user_permissions: list[IRBACPermission] = access['permissions']
+        user: Any | None = access['user']
+
+        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=cls.rbac_service.rbac_map, custom_user=user)
 
     @cached_property
     def user_roles(self) -> dict[str, IRBACRole]:
