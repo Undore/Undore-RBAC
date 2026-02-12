@@ -1,7 +1,7 @@
 from tortoise import Model
 from tortoise import fields
 
-from rbac.interfaces.permissions import IRBACPermission, IRBACRole
+from undore_rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 
 class PermissionEntity(Model):

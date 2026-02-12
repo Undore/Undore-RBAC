@@ -3,7 +3,7 @@ from typing import Any, TypedDict, Optional
 
 from starlette.requests import Request
 
-from rbac.interfaces.permissions import IRBACPermission, IRBACRole
+from undore_rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 class Access(TypedDict):
     permissions: list[IRBACPermission]

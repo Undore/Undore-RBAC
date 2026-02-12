@@ -17,7 +17,7 @@ class IRBACChildPermission(BaseModel):
 class IRawRBACPermissionConfig(BaseModel):
     default: Optional[bool] = False
     explicit: Optional[bool] = False
-    children: Optional[list[IRBACChildPermission]] = {}
+    children: Optional[list[IRBACChildPermission]] = []
 
     @classmethod
     def from_rbac_map(cls, **config):
@@ -40,7 +40,7 @@ class IRawRBACPermission(BaseModel):
         return False
 
     def __repr__(self):
-        return f"<RBACPermission {self.permission}>"
+        return f"<RBACPermission {self.permission} config={self.config.model_dump()}>"
 
     def __str__(self):
         return self.permission

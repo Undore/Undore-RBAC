@@ -9,15 +9,15 @@ from ascender.core.applications.application import Application
 from ascender.core.di.injectfn import inject
 from starlette.requests import Request
 
-from rbac.base_manager import BaseRBACManager
-from rbac.exceptions import InsufficientPermissions
-from rbac.interfaces.config import RBACConfig
-from rbac.logger import init_logger
-from rbac.types.rbac_map import RBACMap
+from undore_rbac.base_manager import BaseRBACManager
+from undore_rbac.exceptions import InsufficientPermissions
+from undore_rbac.interfaces.config import RBACConfig
+from undore_rbac.logger import init_logger
+from undore_rbac.types.rbac_map import RBACMap
 
 if TYPE_CHECKING:
-    from rbac.rbac_exception_handler_service import RbacExceptionHandlerService
-    from rbac.processes.gate import RBACGate
+    from undore_rbac.rbac_exception_handler_service import RbacExceptionHandlerService
+    from undore_rbac.processes.gate import RBACGate
 
 
 @Injectable()
@@ -58,7 +58,7 @@ class RbacService(Service):
         :param custom_meta: Custom metadata, which will be passed to the custom RBAC Manager. See BaseRBACManager docs for more info
         :return: Initialized User RBAC Gate if success.
         """
-        from rbac.processes.gate import RBACGate
+        from undore_rbac.processes.gate import RBACGate
 
         self.logger.debug(f"[bold cyan]Checking permissions for user id={user_id} on [bold magenta]{request_url}")
 

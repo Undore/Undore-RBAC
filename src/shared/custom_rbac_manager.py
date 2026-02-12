@@ -6,8 +6,8 @@ from tortoise.expressions import Q
 
 from entities.permissions import PermissionEntity, UserRoles, RoleEntity
 from settings import get_now
-from rbac.base_manager import BaseRBACManager, Access
-from rbac.interfaces.permissions import IRBACPermission, IRBACRole
+from undore_rbac.base_manager import BaseRBACManager, Access
+from undore_rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 
 class CustomRBACManager(BaseRBACManager):

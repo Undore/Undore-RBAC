@@ -2,7 +2,7 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, field_validator
 
-from rbac.base_manager import BaseRBACManager
+from undore_rbac.base_manager import BaseRBACManager
 
 
 class RBACConfig(BaseModel):

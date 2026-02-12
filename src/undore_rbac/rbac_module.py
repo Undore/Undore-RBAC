@@ -3,9 +3,9 @@ from ascender.core import AscModule
 from ascender.core.applications.application import Application
 from ascender.core.di.interface.provider import Provider
 
-from rbac.interfaces.config import RBACConfig
-from rbac.rbac_exception_handler_service import RbacExceptionHandlerService
-from rbac.services.rbac_service import RbacService
+from undore_rbac.interfaces.config import RBACConfig
+from undore_rbac.rbac_exception_handler_service import RbacExceptionHandlerService
+from undore_rbac.services.rbac_service import RbacService
 
 
 #

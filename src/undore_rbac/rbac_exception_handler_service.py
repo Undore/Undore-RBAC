@@ -8,10 +8,10 @@ from fastapi.encoders import jsonable_encoder
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from rbac.interfaces.config import RBACConfig
-from rbac.logger import init_logger
-from rbac.exceptions import RBACHTTPException
-from rbac.services.rbac_service import RbacService
+from undore_rbac.interfaces.config import RBACConfig
+from undore_rbac.logger import init_logger
+from undore_rbac.exceptions import RBACHTTPException
+from undore_rbac.services.rbac_service import RbacService
 
 
 @Injectable()

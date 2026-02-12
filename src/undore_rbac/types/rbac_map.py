@@ -1,6 +1,6 @@
-from rbac.interfaces.permissions import IRawRBACPermission, IRawRBACPermissionConfig
-from rbac.rbac_default_map import DEFAULT_RBAC_MAP
-from rbac.utils.yaml_reader import YAMLReader
+from undore_rbac.interfaces.permissions import IRawRBACPermission, IRawRBACPermissionConfig
+from undore_rbac.rbac_default_map import DEFAULT_RBAC_MAP
+from undore_rbac.utils.yaml_reader import YAMLReader
 
 # TODO: ADD FOLDER MAPS SUPPORT
 
@@ -29,16 +29,40 @@ class RBACMap(list):
 
         return True
 
-    def __flatten_permissions(self, d) -> list[IRawRBACPermission]:
+    def __flatten_permissions(self, d, prefix: str = "") -> list[IRawRBACPermission]:
         result = []
 
-        for full_key, value in d.items():
-            if value is None:
-                config = IRawRBACPermissionConfig()
-            else:
-                config = IRawRBACPermissionConfig.from_rbac_map(**value)
+        for key, value in d.items():
+            full_key = f"{prefix}.{key}" if prefix else key
 
-            result.append(IRawRBACPermission(permission=full_key, config=config))
+            if isinstance(value, bool) or value is None:
+                result.append(
+                    IRawRBACPermission(
+                        permission=full_key,
+                        config=IRawRBACPermissionConfig()
+                    )
+                )
+                continue
+
+            if not isinstance(value, dict):
+                continue
+
+            if "_config" in value:
+                config_data = value["_config"]
+
+                if config_data is not None and not isinstance(config_data, dict):
+                    raise TypeError(f"{full_key}.{'_config'} must be a mapping")
+
+                config = IRawRBACPermissionConfig.from_rbac_map(**config_data)
+
+                result.append(
+                    IRawRBACPermission(permission=full_key, config=config)
+                )
+
+            nested = {k: v for k, v in value.items() if k != "_config"}
+
+            if nested:
+                result.extend(self.__flatten_permissions(nested, full_key))
 
         return result
 

@@ -3,7 +3,7 @@ from fastapi import Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from typing_extensions import deprecated
 
-from rbac.services.rbac_service import RbacService
+from undore_rbac.services.rbac_service import RbacService
 
 
 # noinspection PyMethodOverriding

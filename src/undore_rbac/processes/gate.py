@@ -4,10 +4,10 @@ from typing import Union, Any
 from ascender.core.di.injectfn import inject
 from starlette.requests import Request
 
-from rbac.base_manager import Access
-from rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
-from rbac.services.rbac_service import RbacService
-from rbac.types.rbac_map import RBACMap
+from undore_rbac.base_manager import Access
+from undore_rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
+from undore_rbac.services.rbac_service import RbacService
+from undore_rbac.types.rbac_map import RBACMap
 
 
 class RBACGate:

@@ -1,5 +1,5 @@
 DEFAULT_RBAC_MAP = {
-    "undore_rbac.users.permissions.view": {
+    "undore_rbac.wildcard": {
         "explicit": True,
         "default": False
     }

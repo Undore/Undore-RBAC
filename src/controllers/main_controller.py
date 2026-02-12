@@ -2,8 +2,8 @@ import jwt
 from ascender.core import Controller, Get
 
 from entities.users import UserEntity
-from rbac.rbac_guard import RBACGuard
-from rbac.services.rbac_service import RbacService
+from undore_rbac.rbac_guard import RBACGuard
+from undore_rbac.services.rbac_service import RbacService
 
 
 @Controller(guards=[],
