@@ -26,6 +26,9 @@ class RbacGuard(Guard):
         """
         Works same as FastAPI's Dependency Injection
         """
-        request.state.token = token.credentials
+        try:
+            request.state.token = token.credentials
+        except AttributeError:
+            pass
         user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request)
         return await self.rbac.check_access(request, user_id, self.permissions)

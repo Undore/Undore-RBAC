@@ -21,7 +21,10 @@ class CustomRBACManager(BaseRBACManager):
 
     async def authorize(self, token: str, request: Request | None = None) -> str:
         if request:
-            request.state.token = token
+            try:
+                request.state.token = token.credentials
+            except AttributeError:
+                pass
         decoded = jwt.decode(token.encode(), "KEY", algorithms=["HS256"])
         return decoded['subject_id']
 

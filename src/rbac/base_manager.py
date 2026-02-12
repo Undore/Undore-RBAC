@@ -17,7 +17,7 @@ class BaseRBACManager(ABC):
     """
 
     @abstractmethod
-    async def authorize(self, token: str, request: Optional[Request] = None) -> str:
+    async def authorize(self, token: str, request: Optional[Request] = None) -> Any:
         """
         Decode authentication token and return user id
         :param token: Authentication token
