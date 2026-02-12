@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any, cast, Optional
 
 import jwt
 from starlette.requests import Request
@@ -11,7 +11,7 @@ from rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 
 class CustomRBACManager(BaseRBACManager):
-    async def fetch_user_access(self, user_id: Any = None) -> Access:
+    async def fetch_user_access(self, user_id: Any = None, custom_meta: Optional[dict] = None) -> Access:
         user_roles = await self.get_user_roles(user_id)
         return {
             "permissions": await self.filter_permissions(user_id=user_id, role_ids=[i.id for i in user_roles]),
@@ -19,10 +19,10 @@ class CustomRBACManager(BaseRBACManager):
             "user": None
         }
 
-    async def authorize(self, token: str, request: Request | None = None) -> str:
+    async def authorize(self, token: str, request: Request | None = None, custom_meta: Optional[dict] = None) -> str:
         if request:
             try:
-                request.state.token = token.credentials
+                request.state.token = token
             except AttributeError:
                 pass
         decoded = jwt.decode(token.encode(), "KEY", algorithms=["HS256"])
@@ -51,9 +51,3 @@ class CustomRBACManager(BaseRBACManager):
 
         user_roles: list[RoleEntity] = await RoleEntity.filter(Q(id__in=user_role_ids))
         return [i.to_interface() for i in user_roles]
-
-    async def get_user_role_ids(self, user_id: Any) -> list[int]:
-        if isinstance(user_id, str):
-            user_id = int(user_id)
-
-        return [i.role_id for i in await UserRoles.filter(user_id=user_id)]

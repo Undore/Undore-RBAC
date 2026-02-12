@@ -43,7 +43,7 @@ class RbacService(Service):
     def on_startup(self):
         self.logger = init_logger(self.config.log_level)
 
-    async def check_access(self, request: Request, user_id: str, permissions: Sequence[str]) -> RBACGate:
+    async def check_access(self, request_url: str, user_id: str, permissions: Sequence[str], custom_meta: dict | None = None) -> RBACGate:
         """
         Check if user has specific permissions and raise an exception if not
 
@@ -52,20 +52,21 @@ class RbacService(Service):
 
         RBACGate can contain a custom user object. See gate.user docs for info
 
-        :param request: Starlette Request object
+        :param request_url: Request URL
         :param user_id: User ID to check
         :param permissions: Required permissions in RBACMap format (for example: test.modify)
+        :param custom_meta: Custom metadata, which will be passed to the custom RBAC Manager. See BaseRBACManager docs for more info
         :return: Initialized User RBAC Gate if success.
         """
         from rbac.processes.gate import RBACGate
 
-        self.logger.debug(f"[bold cyan]Checking permissions for user id={user_id} on [bold magenta]{request.url.path}")
+        self.logger.debug(f"[bold cyan]Checking permissions for user id={user_id} on [bold magenta]{request_url}")
 
-        gate = await RBACGate.from_user_id(user_id)
+        gate = await RBACGate.from_user_id(user_id, custom_meta=custom_meta)
 
         for permission in permissions:
-            if not gate.compare(permission):
-                raise InsufficientPermissions(request, (permission if self.config.expose_missing_permission else None))
+            if not gate.check_access(permission):
+                raise InsufficientPermissions(request_url, (permission if self.config.expose_missing_permission else None))
 
         self.logger.info(f"[green]Access granted for user id={user_id}")
 
