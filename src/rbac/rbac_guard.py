@@ -1,12 +1,13 @@
 from ascender.guards import Guard
 from fastapi import Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from typing_extensions import deprecated
 
 from rbac.services.rbac_service import RbacService
 
 
 # noinspection PyMethodOverriding
-class RbacGuard(Guard):
+class RBACGuard(Guard):
     rbac: RbacService
 
     def __init__(self, *permissions: str):
@@ -26,9 +27,9 @@ class RbacGuard(Guard):
         """
         Works same as FastAPI's Dependency Injection
         """
-        try:
-            request.state.token = token.credentials
-        except AttributeError:
-            pass
-        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request)
-        return await self.rbac.check_access(request, user_id, self.permissions)
+        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
+        return await self.rbac.check_access(request.url.path, user_id, self.permissions, custom_meta={"org_id": 123})
+
+@deprecated("Use RBACGuard Instead. Will soon be removed!")
+class RbacGuard(RBACGuard):
+    pass

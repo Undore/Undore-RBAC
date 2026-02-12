@@ -2,6 +2,7 @@ from functools import cached_property
 from typing import Union, Any
 
 from ascender.core.di.injectfn import inject
+from starlette.requests import Request
 
 from rbac.base_manager import Access
 from rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
@@ -36,10 +37,10 @@ class RBACGate:
         return self.__custom_user
 
     @classmethod
-    async def from_user_id(cls, user_id: Any) -> "RBACGate":
+    async def from_user_id(cls, user_id: Any, custom_meta: dict | None = None) -> "RBACGate":
         rbac_manager = cls.rbac_service.rbac_manager
 
-        user_access = await rbac_manager.fetch_user_access(user_id)
+        user_access = await rbac_manager.fetch_user_access(user_id, custom_meta=custom_meta)
         user_roles: list[IRBACRole] = user_access['roles']
         user_permissions: list[IRBACPermission] = user_access['permissions']
         user: Any | None = user_access['user']
@@ -105,6 +106,7 @@ class RBACGate:
         3. User permissions
         Last permissions override previous, so user permissions are the highest priority and child permissions are the lowest (priority)
         The higher is group priority, the more important it is (in sense of overrides)
+        Also keep in mind, that overrides (* permissions) are generally more important than normal ones and can override their value
 
         Calculated only once to save performance. Use update_overrides to update this.
 
@@ -157,36 +159,44 @@ class RBACGate:
 
         return permissions_sorted
 
-    def compare(self, required_permission: str) -> bool:
+    def check_access(self, required_permissions: str | list[str]) -> bool:
         """
-        Checks if user has specific permission.
+        Checks if user has specific permission(s).
         Takes overrides, values, roles, permission configs and priorities into account
+        If at least one fails, returns False
+        If at least one succeeds, returns True
+        Otherwise returns False
 
         :raises ValueError: If permission is not present in RBAC Map
-        :param required_permission: RBAC Permission to check
+        :param required_permissions: RBAC Permission(s) to check
         :return: True if access granted, otherwise False
         """
+        rp = required_permissions if isinstance(required_permissions, list) else [required_permissions]
 
-        # noinspection PyTypeChecker
-        if not (_permission := self.rbac_map.find(required_permission)):
-            raise ValueError(f"Permission {required_permission} is not present in RBAC Map")
+        for check_permission in rp:
+            # noinspection PyTypeChecker
+            if not (_permission := self.rbac_map.find(check_permission)):
+                raise ValueError(f"Permission {check_permission} is not present in RBAC Map")
 
-        _permission: IRawRBACPermission
+            _permission: IRawRBACPermission
 
-        if not _permission.config.explicit:
-            # Do not check overrides, if explicit permission
+            if not _permission.config.explicit:
+                # Do not check overrides, if explicit permission
 
-            override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
+                override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
 
-            override = self.__check_permission_overriding(required_permission, override_permissions)
-            if override is not None:
-                return override
+                override = self.__check_permission_overriding(check_permission, override_permissions)
+                if override is not None:
+                    if override is False:
+                        return False
+                    continue
 
+            if self.user_permissions_dict.get(_permission.permission, _permission.config.default):
+                continue
 
-        if self.user_permissions_dict.get(_permission.permission, _permission.config.default):
-            return True
+            return False
 
-        return False
+        return True
 
 
     def __check_permission_overriding(self, required_permission: str, overrides: list[tuple[str, bool]]) -> bool | None:

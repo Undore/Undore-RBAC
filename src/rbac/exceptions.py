@@ -35,9 +35,9 @@ class RBACHTTPException(HTTPException):
 
 
 class InsufficientPermissions(RBACHTTPException):
-    def __init__(self, request: Request, required_permission: str | None = None):
+    def __init__(self, request_url: str, required_permission: str | None = None):
         self.missing_permission = required_permission
-        self.request = request
+        self.request_url = request_url
 
         kw = {}
         if required_permission:
@@ -47,7 +47,7 @@ class InsufficientPermissions(RBACHTTPException):
                          error_code="RBAC_ACCESS_DENIED")
 
     def __repr__(self):
-        return f"403 <InsufficientPermissions route={self.request.url.path} missing={self.missing_permission}>"
+        return f"403 <InsufficientPermissions route={self.request_url} missing={self.missing_permission}>"
 
     def __str__(self):
         return f"Missing permission: {self.missing_permission}"

@@ -1,10 +1,9 @@
+import jwt
 from ascender.core import Controller, Get
 
 from entities.users import UserEntity
-from rbac.rbac_guard import RbacGuard
+from rbac.rbac_guard import RBACGuard
 from rbac.services.rbac_service import RbacService
-
-import jwt
 
 
 @Controller(guards=[],
@@ -23,9 +22,7 @@ class MainController:
         algorythm = "HS256"
         return jwt.encode(payload, secret_key, algorithm=algorythm)
 
-    @RbacGuard("users.view")
+    @RBACGuard("users.view", "users.manage")
     @Get()
     async def main_endpoint(self):
-
-
         return {"success": True}
