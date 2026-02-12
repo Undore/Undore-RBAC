@@ -1,12 +1,13 @@
 from typing import Any, cast
 
 import jwt
+from starlette.requests import Request
 from tortoise.expressions import Q
 
 from entities.permissions import PermissionEntity, UserRoles, RoleEntity
 from settings import get_now
-from shared.rbac.base_manager import BaseRBACManager, Access
-from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole
+from rbac.base_manager import BaseRBACManager, Access
+from rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 
 class CustomRBACManager(BaseRBACManager):
@@ -18,7 +19,9 @@ class CustomRBACManager(BaseRBACManager):
             "user": None
         }
 
-    async def authorize(self, token: str) -> str:
+    async def authorize(self, token: str, request: Request | None = None) -> str:
+        if request:
+            request.state.token = token
         decoded = jwt.decode(token.encode(), "KEY", algorithms=["HS256"])
         return decoded['subject_id']
 

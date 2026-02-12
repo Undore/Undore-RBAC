@@ -8,8 +8,8 @@ from ascender.core.types import IBootstrap
 from routes import routes
 from settings import DATABASE_CONNECTION, BASE_PATH
 from shared.custom_rbac_manager import CustomRBACManager
-from shared.rbac.interfaces.config import RBACConfig
-from shared.rbac.rbac_module import RbacModule
+from rbac.interfaces.config import RBACConfig
+from rbac.rbac_module import RbacModule
 
 
 appBootstrap: IBootstrap = {

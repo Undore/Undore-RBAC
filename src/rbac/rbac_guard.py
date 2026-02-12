@@ -2,7 +2,7 @@ from ascender.guards import Guard
 from fastapi import Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from shared.rbac.services.rbac_service import RbacService
+from rbac.services.rbac_service import RbacService
 
 
 # noinspection PyMethodOverriding
@@ -26,6 +26,6 @@ class RbacGuard(Guard):
         """
         Works same as FastAPI's Dependency Injection
         """
-        self.rbac.request_scope.set(token.credentials)
-        user_id = await self.rbac.rbac_manager.authorize(token.credentials)
+        request.state.token = token.credentials
+        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request)
         return await self.rbac.check_access(request, user_id, self.permissions)

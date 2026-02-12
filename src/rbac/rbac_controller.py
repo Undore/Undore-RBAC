@@ -1,7 +1,7 @@
 from ascender.core import Controller, Get
 
-from shared.rbac.rbac_guard import RbacGuard
-from shared.rbac.services.rbac_service import RbacService
+from rbac.rbac_guard import RbacGuard
+from rbac.services.rbac_service import RbacService
 
 
 @Controller(guards=[],

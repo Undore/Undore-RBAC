@@ -8,10 +8,10 @@ from fastapi.encoders import jsonable_encoder
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from shared.rbac.interfaces.config import RBACConfig
-from shared.rbac.logger import init_logger
-from shared.rbac.exceptions import RBACHTTPException
-from shared.rbac.services.rbac_service import RbacService
+from rbac.interfaces.config import RBACConfig
+from rbac.logger import init_logger
+from rbac.exceptions import RBACHTTPException
+from rbac.services.rbac_service import RbacService
 
 
 @Injectable()
@@ -37,10 +37,15 @@ class RbacExceptionHandlerService(Service):
         user_id = None
 
         rbac = inject(RbacService)
-        token = rbac.request_scope.get()
+
+        token = None
+        try:
+            token = request.state.token
+        except AttributeError:
+            pass
 
         if token:
-            user_id = await rbac.rbac_manager.authorize(token)
+            user_id = await rbac.rbac_manager.authorize(token, request=request)
 
         self.logger.info(f"[bold red]RBAC Exception handled{' for user id={}'.format(user_id) if user_id else ''}[/bold red]: [yellow]{exc}")  # War crime
 

@@ -1,8 +1,8 @@
-from typing import Type, Literal, Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, field_validator
 
-from shared.rbac.base_manager import BaseRBACManager
+from rbac.base_manager import BaseRBACManager
 
 
 class RBACConfig(BaseModel):

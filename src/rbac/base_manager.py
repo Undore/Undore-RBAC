@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Optional
 
-from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole
+from starlette.requests import Request
+
+from rbac.interfaces.permissions import IRBACPermission, IRBACRole
 
 class Access(TypedDict):
     permissions: list[IRBACPermission]
@@ -15,10 +17,11 @@ class BaseRBACManager(ABC):
     """
 
     @abstractmethod
-    async def authorize(self, token: str) -> str:
+    async def authorize(self, token: str, request: Optional[Request] = None) -> str:
         """
         Decode authentication token and return user id
         :param token: Authentication token
+        :param request: Optional. Always provided from RBAC internally and can be used to avoid race conditions
         :return: User id
         """
         ...

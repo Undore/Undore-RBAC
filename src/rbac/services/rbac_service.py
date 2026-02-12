@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextvars
 from logging import Logger
 from typing import Sequence, TYPE_CHECKING
 
@@ -8,18 +7,17 @@ from ascender.common import Injectable
 from ascender.core import Service
 from ascender.core.applications.application import Application
 from ascender.core.di.injectfn import inject
-from fastapi import HTTPException
 from starlette.requests import Request
 
-from shared.rbac.base_manager import BaseRBACManager
-from shared.rbac.exceptions import InsufficientPermissions
-from shared.rbac.interfaces.config import RBACConfig
-from shared.rbac.logger import init_logger
-from shared.rbac.types.rbac_map import RBACMap
+from rbac.base_manager import BaseRBACManager
+from rbac.exceptions import InsufficientPermissions
+from rbac.interfaces.config import RBACConfig
+from rbac.logger import init_logger
+from rbac.types.rbac_map import RBACMap
 
 if TYPE_CHECKING:
-    from shared.rbac.rbac_exception_handler_service import RbacExceptionHandlerService
-    from shared.rbac.processes.gate import RBACGate
+    from rbac.rbac_exception_handler_service import RbacExceptionHandlerService
+    from rbac.processes.gate import RBACGate
 
 
 @Injectable()
@@ -36,8 +34,6 @@ class RbacService(Service):
         self.application = application
 
         self.handler: RbacExceptionHandlerService = inject("ExceptionHandler")
-
-        self.request_scope = contextvars.ContextVar("request_token")
 
         self.rbac_manager: BaseRBACManager = config.rbac_manager
         self.rbac_map = RBACMap(self.config.rbac_map_path)
@@ -61,7 +57,7 @@ class RbacService(Service):
         :param permissions: Required permissions in RBACMap format (for example: test.modify)
         :return: Initialized User RBAC Gate if success.
         """
-        from shared.rbac.processes.gate import RBACGate
+        from rbac.processes.gate import RBACGate
 
         self.logger.debug(f"[bold cyan]Checking permissions for user id={user_id} on [bold magenta]{request.url.path}")
 

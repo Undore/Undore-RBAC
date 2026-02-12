@@ -1,7 +1,7 @@
 from typing import Sequence
 from ascender.core.router import RouterRoute
 from controllers.main_controller import MainController
-from shared.rbac.rbac_controller import RBACController
+from rbac.rbac_controller import RBACController
 
 routes: Sequence[RouterRoute | dict] = [
     {

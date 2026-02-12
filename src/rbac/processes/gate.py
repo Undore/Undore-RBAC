@@ -3,10 +3,10 @@ from typing import Union, Any
 
 from ascender.core.di.injectfn import inject
 
-from shared.rbac.base_manager import Access
-from shared.rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
-from shared.rbac.services.rbac_service import RbacService
-from shared.rbac.types.rbac_map import RBACMap
+from rbac.base_manager import Access
+from rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
+from rbac.services.rbac_service import RbacService
+from rbac.types.rbac_map import RBACMap
 
 
 class RBACGate:

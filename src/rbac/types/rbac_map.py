@@ -1,6 +1,6 @@
-from shared.rbac.interfaces.permissions import IRawRBACPermission, IRawRBACPermissionConfig
-from shared.rbac.rbac_default_map import DEFAULT_RBAC_MAP
-from shared.rbac.utils.yaml_reader import YAMLReader
+from rbac.interfaces.permissions import IRawRBACPermission, IRawRBACPermissionConfig
+from rbac.rbac_default_map import DEFAULT_RBAC_MAP
+from rbac.utils.yaml_reader import YAMLReader
 
 # TODO: ADD FOLDER MAPS SUPPORT
 
