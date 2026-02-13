@@ -5,6 +5,7 @@ __pycache__/
 .idea
 poetry.lock
 .env
+.asc_venv
 
 # C extensions
 *.so

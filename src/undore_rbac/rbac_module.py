@@ -1,5 +1,5 @@
 from ascender.contrib.middlewares import useMiddlewares
-from ascender.core import AscModule
+from ascender.core import AscModule, provideLifecycle
 from ascender.core.applications.application import Application
 from ascender.core.di.interface.provider import Provider
 
@@ -55,5 +55,6 @@ class RbacModule:
             {
                 "provide": "ExceptionHandler",
                 "use_class": RbacExceptionHandlerService
-            }
+            },
+            provideLifecycle(tokens=[RbacService])
         ]
