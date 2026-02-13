@@ -10,7 +10,7 @@ class RBACExceptionHandlerConfig(BaseModel):
 
     use: If True, all RBACException exceptions will be handled in a specific format (See rbac_exception_handler_service for details)
     enable_usage_warning: Log a warning, if the RBAC exception handler failed to start. Also affects exception handler debug message on start
-    expose_missing_permission: When raising an RBAC Access Denied exception, whether to show which permission is missing
+    expose_missing_permission: Only relevant if use is True. When raising an INTERNAL InsufficientPermissions Exception, whether to show which permission is missing
     """
     use: bool = True
     enable_usage_warning: bool = True
