@@ -7,7 +7,6 @@ from ascender.common import Injectable
 from ascender.core import Service
 from ascender.core.applications.application import Application
 from ascender.core.di.injectfn import inject
-from starlette.requests import Request
 
 from undore_rbac.base_manager import BaseRBACManager
 from undore_rbac.exceptions import InsufficientPermissions
@@ -66,7 +65,7 @@ class RbacService(Service):
 
         for permission in permissions:
             if not gate.check_access(permission):
-                raise InsufficientPermissions(request_url, (permission if self.config.expose_missing_permission else None))
+                raise InsufficientPermissions(request_url, (permission if self.config.exception_handler_config.expose_missing_permission else None))
 
         self.logger.info(f"[green]Access granted for user id={user_id}")
 

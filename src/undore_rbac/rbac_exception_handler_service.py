@@ -22,11 +22,11 @@ class RbacExceptionHandlerService(Service):
         self.app = application
         config = inject(RBACConfig)
 
-        if config.use_internal_exception_handler:
-            if config.exception_handler_warning:
+        if config.exception_handler_config.use:
+            if config.exception_handler_config.enable_usage_warning:
                 self.logger.debug("Using Internal Exception Handler. In order to turn this off, see RBACConfig")
             self.app.app.add_exception_handler(RBACHTTPException, self.handle)
-        elif config.exception_handler_warning:
+        elif config.exception_handler_config.enable_usage_warning:
             self.logger.warning("[bold yellow]RBAC Exception handler is not being used. RBACExceptions may have unexpected behaviour, like not displaying the missing permission."
                                 "\nFor info or to disable this warning, see RBACConfig in RBACModule.for_root()")
 

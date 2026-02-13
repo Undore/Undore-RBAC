@@ -8,7 +8,7 @@ from ascender.core.types import IBootstrap
 from routes import routes
 from settings import DATABASE_CONNECTION, BASE_PATH
 from shared.custom_rbac_manager import CustomRBACManager
-from undore_rbac.interfaces.config import RBACConfig
+from undore_rbac.interfaces.config import RBACConfig, RBACExceptionHandlerConfig
 from undore_rbac.rbac_module import RbacModule
 
 
@@ -21,7 +21,7 @@ appBootstrap: IBootstrap = {
         RbacModule.for_root(
             RBACConfig(
                 rbac_manager=CustomRBACManager(),
-                rbac_map_path=os.path.join(BASE_PATH, "rbac_map.yml")
+                rbac_map_path=os.path.join(BASE_PATH, "rbac_map.yml"),
             )),
         provideRouter(routes),
         provideDatabase(ORMEnum.TORTOISE, DATABASE_CONNECTION)

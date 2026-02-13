@@ -1,9 +1,20 @@
-from typing import Literal, Optional
+from typing import Literal, Optional, TypedDict
 
 from pydantic import BaseModel, field_validator
 
 from undore_rbac.base_manager import BaseRBACManager
 
+class RBACExceptionHandlerConfig(BaseModel):
+    """
+    Part of RBACConfig
+
+    use: If True, all RBACException exceptions will be handled in a specific format (See rbac_exception_handler_service for details)
+    enable_usage_warning: Log a warning, if the RBAC exception handler failed to start. Also affects exception handler debug message on start
+    expose_missing_permission: When raising an RBAC Access Denied exception, whether to show which permission is missing
+    """
+    use: bool = True
+    enable_usage_warning: bool = True
+    expose_missing_permission: bool = True
 
 class RBACConfig(BaseModel):
     """
@@ -13,16 +24,12 @@ class RBACConfig(BaseModel):
     rbac_map_path: Absolute path to rbac map YAML file
     rbac_manager: RBAC Manager INSTANCE. Must be a subclass of BaseRBACManager
     log_level: RBAC Logging level
-    use_internal_exception_handler: If True, all RBACException exceptions will be handled in a specific format (See rbac_exception_handler_service for details)
-    exception_handler_warning: Display a warning, if the RBAC exception handler failed to start. Also affects exception handler debug message on start
-    expose_missing_permission: When raising an RBAC Access Denied exception, whether to show which permission is missing
+    log_level: See RBACExceptionHandlerConfig for details
     """
     rbac_map_path: str
     rbac_manager: BaseRBACManager
     log_level: Optional[Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]] = "DEBUG"
-    use_internal_exception_handler: bool = True
-    exception_handler_warning: bool = True
-    expose_missing_permission: bool = True
+    exception_handler_config: RBACExceptionHandlerConfig = RBACExceptionHandlerConfig()
 
     @field_validator('rbac_manager')
     def validate_rbac_manager(cls, v):
