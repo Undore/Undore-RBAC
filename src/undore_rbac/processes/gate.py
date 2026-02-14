@@ -5,6 +5,7 @@ from ascender.core.di.injectfn import inject
 from starlette.requests import Request
 
 from undore_rbac.base_manager import Access
+from undore_rbac.interfaces.config import RBACConfig
 from undore_rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
 from undore_rbac.services.rbac_service import RbacService
 from undore_rbac.types.rbac_map import RBACMap
@@ -26,6 +27,7 @@ class RBACGate:
         self.__user_roles = user_roles
         self.__custom_user: Any | None = custom_user
         self.rbac_map = rbac_map
+        self.config = inject(RBACConfig)
 
     @property
     def user(self) -> Any | None:
@@ -143,7 +145,8 @@ class RBACGate:
         scoped_permissions.sort(key=lambda permission: permission.created_at, reverse=True)
 
         if scoped_permissions_copy != scoped_permissions:
-            raise RuntimeError("IRBACPermissions must be sorted by created_at (Newer ones first). Please, implement this in your manager")
+            if self.config.require_sorted_permissions:
+                raise RuntimeError("IRBACPermissions must be sorted by created_at (Newer ones first). Please, implement this in your manager")
 
         permissions_sorted: list[tuple[str, bool]] = []
 

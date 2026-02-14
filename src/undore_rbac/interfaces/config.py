@@ -25,11 +25,13 @@ class RBACConfig(BaseModel):
     rbac_manager: RBAC Manager INSTANCE. Must be a subclass of BaseRBACManager
     log_level: RBAC Logging level
     log_level: See RBACExceptionHandlerConfig for details
+    require_sorted_permissions: Require all IRBACPermission objects provided in a permission check to be sorted by CREATED_AT
     """
     rbac_map_path: str
     rbac_manager: BaseRBACManager
     log_level: Optional[Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]] = "DEBUG"
     exception_handler_config: RBACExceptionHandlerConfig = RBACExceptionHandlerConfig()
+    require_sorted_permissions: bool = True  # Disabling this will not raise an exception if permissions are not sorted by created_at for priority
 
     @field_validator('rbac_manager')
     def validate_rbac_manager(cls, v):
