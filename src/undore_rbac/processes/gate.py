@@ -146,7 +146,8 @@ class RBACGate:
 
         if scoped_permissions_copy != scoped_permissions:
             if self.config.require_sorted_permissions:
-                raise RuntimeError("IRBACPermissions must be sorted by created_at (Newer ones first). Please, implement this in your manager")
+                raise RuntimeError("IRBACPermissions must be sorted by created_at (Newer ones first). Please, implement this in your manager "
+                                   "\nYou can disable this requirement in config. See RBACConfig docs for details")
 
         permissions_sorted: list[tuple[str, bool]] = []
 
