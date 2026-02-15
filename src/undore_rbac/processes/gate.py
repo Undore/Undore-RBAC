@@ -40,7 +40,11 @@ class RBACGate:
 
     @classmethod
     async def from_user_id(cls, user_id: Any, custom_meta: dict | None = None) -> "RBACGate":
-        rbac_service = inject(RbacService)
+        if isinstance(cls.rbac_service, RbacService):
+            rbac_service = cls.rbac_service
+        else:
+            rbac_service = inject(RbacService)
+
         rbac_manager = rbac_service.rbac_manager
 
         user_access = await rbac_manager.fetch_user_access(user_id, custom_meta=custom_meta)
@@ -51,8 +55,12 @@ class RBACGate:
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
     @classmethod
-    def from_access(cls, access: Access) -> "RBACGate":
-        rbac_service = inject(RbacService)
+    async def from_access(cls, access: Access) -> "RBACGate":
+        if isinstance(cls.rbac_service, RbacService):
+            rbac_service = cls.rbac_service
+        else:
+            rbac_service = inject(RbacService)
+
         user_roles: list[IRBACRole] = access['roles']
         user_permissions: list[IRBACPermission] = access['permissions']
         user: Any | None = access['user']
