@@ -40,22 +40,24 @@ class RBACGate:
 
     @classmethod
     async def from_user_id(cls, user_id: Any, custom_meta: dict | None = None) -> "RBACGate":
-        rbac_manager = cls.rbac_service.rbac_manager
+        rbac_service = inject(RbacService)
+        rbac_manager = rbac_service.rbac_manager
 
         user_access = await rbac_manager.fetch_user_access(user_id, custom_meta=custom_meta)
         user_roles: list[IRBACRole] = user_access['roles']
         user_permissions: list[IRBACPermission] = user_access['permissions']
         user: Any | None = user_access['user']
 
-        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=cls.rbac_service.rbac_map, custom_user=user)
+        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
     @classmethod
     def from_access(cls, access: Access) -> "RBACGate":
+        rbac_service = inject(RbacService)
         user_roles: list[IRBACRole] = access['roles']
         user_permissions: list[IRBACPermission] = access['permissions']
         user: Any | None = access['user']
 
-        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=cls.rbac_service.rbac_map, custom_user=user)
+        return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
     @cached_property
     def user_roles(self) -> dict[str, IRBACRole]:
