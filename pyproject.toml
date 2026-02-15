@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "undore-rbac"
-version = "1.1.5"
+version = "1.1.7"
 description = "RBAC System for Ascender Framework from Undore!"
-authors = ["Undore <flora.wolf4024@eagereverest.com>"]
+authors = ["Undore <deronuno@outlook.com>"]
 readme = "README.md"
 package-mode = true
 packages = [{include="undore_rbac", from="src"}]

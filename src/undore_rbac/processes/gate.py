@@ -55,7 +55,7 @@ class RBACGate:
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
     @classmethod
-    async def from_access(cls, access: Access) -> "RBACGate":
+    def from_access(cls, access: Access) -> "RBACGate":
         if isinstance(cls.rbac_service, RbacService):
             rbac_service = cls.rbac_service
         else:
