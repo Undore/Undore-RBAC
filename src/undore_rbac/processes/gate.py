@@ -50,7 +50,7 @@ class RBACGate:
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=cls.rbac_service.rbac_map, custom_user=user)
 
     @classmethod
-    async def from_access(cls, access: Access) -> "RBACGate":
+    def from_access(cls, access: Access) -> "RBACGate":
         user_roles: list[IRBACRole] = access['roles']
         user_permissions: list[IRBACPermission] = access['permissions']
         user: Any | None = access['user']
