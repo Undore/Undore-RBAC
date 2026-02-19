@@ -54,10 +54,12 @@ class RBACMap(list):
                     raise TypeError(f"{full_key}.{'_config'} must be a mapping")
 
                 config = IRawRBACPermissionConfig.from_rbac_map(**config_data)
+            else:
+                config = IRawRBACPermissionConfig()
 
-                result.append(
-                    IRawRBACPermission(permission=full_key, config=config)
-                )
+            result.append(
+                IRawRBACPermission(permission=full_key, config=config)
+            )
 
             nested = {k: v for k, v in value.items() if k != "_config"}
 
