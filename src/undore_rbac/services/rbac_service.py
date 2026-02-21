@@ -7,6 +7,7 @@ from ascender.common import Injectable
 from ascender.core import Service
 from ascender.core.applications.application import Application
 from ascender.core.di.injectfn import inject
+from typing_extensions import deprecated
 
 from undore_rbac.base_manager import BaseRBACManager
 from undore_rbac.exceptions import InsufficientPermissions
@@ -22,8 +23,7 @@ if TYPE_CHECKING:
 @Injectable()
 class RbacService(Service):
     """
-    RBAC Service class is the main RBAC instance.
-    This class is mostly used automatically by other RBAC services
+    RBACService is not very useful right now, but I'll get to it
     """
     logger: Logger
     handler: RbacExceptionHandlerService
@@ -42,7 +42,8 @@ class RbacService(Service):
     def on_startup(self):
         self.logger = init_logger(self.config.log_level)
 
-    async def check_access(self, request_url: str, user_id: str, permissions: Sequence[str], custom_meta: dict | None = None) -> RBACGate:
+    @deprecated("Use gate.check_access instead")
+    async def check_access(self, request_url: str, user_id: str, permissions: list[str], custom_meta: dict | None = None) -> RBACGate:
         """
         Check if user has specific permissions and raise an exception if not
 
@@ -63,9 +64,9 @@ class RbacService(Service):
 
         gate = await RBACGate.from_user_id(user_id, custom_meta=custom_meta)
 
-        for permission in permissions:
-            if not gate.check_access(permission):
-                raise InsufficientPermissions(request_url, (permission if self.config.exception_handler_config.expose_missing_permission else None))
+        access_status, denial_reason = gate.check_access(permissions)
+        if access_status is False:
+            raise InsufficientPermissions(request_url, (denial_reason.permission if self.config.exception_handler_config.expose_missing_permission else None))
 
         self.logger.info(f"[green]Access granted for user id={user_id}")
 

@@ -1,6 +1,6 @@
 from ascender.core import Controller, Get
 
-from undore_rbac.rbac_guard import RbacGuard
+from undore_rbac.rbac_guard import RBACGuard
 from undore_rbac.services.rbac_service import RbacService
 
 
@@ -11,7 +11,7 @@ class RBACController:
     def __init__(self, rbac: RbacService):
         self.rbac = rbac
 
-    @RbacGuard("undore_rbac.users.permissions.view")
+    @RBACGuard("undore_rbac.users.permissions.view")
     @Get('/users/{user_id}/permissions')
     async def main_endpoint(self, user_id: int):
         return {"success": True}
