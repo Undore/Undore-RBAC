@@ -12,8 +12,7 @@ Its goal is to **separate permission-evaluation logic and priority rules from da
 
 - **RBAC Map** - a YAML file that declares all available permissions and their configuration (`default`, `explicit`, `children`).
 - **RBAC Manager** - the *user-implemented* bridge between your database and UndoreRBAC. You implement methods for authentication and for fetching roles/permissions.
-- **RbacService** - the application-level service used by guards/middleware to perform access checks.
-- **RBACGate** - an object that represents a single user’s access state; it performs comparison, inheritance, and override logic.
+- **RBACGate** - <ins>You will use this the most:</ins> an object that represents a single user’s access state; it performs all the comparison, inheritance, and override logic.
 - **Permissions** carry a boolean `value` (True/False). This allows both granting and explicit denial of permissions.
 
 ---
@@ -24,10 +23,18 @@ Its goal is to **separate permission-evaluation logic and priority rules from da
    - children permissions
    - roles (shared permissions) - roles with **higher** `priority` take precedence
    - scoped permissions (permissions assigned directly to the user)
+   - wildcards (regardless of which hierarchy level they are assigned to)
 
 2. **Wildcard** (`*`), e.g. `users.*`, means “everything under `users.`” - but a wildcard can be **overridden** by a permission marked `explicit` in the RBAC Map.
 
 3. **`explicit: true`** - a permission marked explicit **ignores** wildcard/override propagation. Use with caution.
+
+### Important note on Wildcard priority
+Wildcards are the highest in priority. Even if a wildcard permission is assigned to a lower priority role or children permission, it CANNOT
+be overwritten by a higher priority permission (if it is not a wildcard itself)
+
+For example, if user has scoped permission `users.manage` on value True and also has a role, which has a wildcard permission `users.*` on value `False`, access **will be denied**, 
+regardless of the fact that scoped permissions are higher in the hierarchy 
 
 ---
 
@@ -130,10 +137,14 @@ class RBACGuard(Guard):
     def __post_init__(self, rbac: RbacService):
         self.rbac = rbac
 
-    async def can_activate(self, request: Request, token: HTTPAuthorizationCredentials = Security(HTTPBearer())):
-        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request)
-        await self.rbac.check_access(request.url.path, user_id, self.permissions)
-        return True
+     async def can_activate(self, request: Request, token: HTTPAuthorizationCredentials = Security(HTTPBearer())):
+        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
+        
+        gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
+        status, reason = gate.check_access(self.permissions)
+        if status is False:
+            raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
+
 ```
 
 ### ParamGuard (recommended to avoid duplicated DB calls)
@@ -150,14 +161,18 @@ class RBACParamGuard(ParamGuard):
         user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request)
         
         if self.permissions:
-           gate = await self.rbac.check_access(request.url.path, user_id, self.permissions)
+           gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
+           status, reason = gate.check_access(self.permissions)
+           if status is False:
+               raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
+            
            user = gate.user
         else:  # Save performance if permission check is not needed
            user = ... # Your user GET logic
           
         # Your pydantic model for creds kwarg in endpoint
         return AuthCredentials(
-            user=user
+            user=user  # You can also pass the gate here to reuse it later
         )
 ```
 
@@ -173,6 +188,7 @@ class RBACParamGuard(ParamGuard):
    - **Children** (applied first),
    - **Roles** (applied next - consider `role.priority` and assignment `created_at`),
    - **Scoped permissions** assigned directly to the user (applied last - strongest).
+   - **Wildcards**
 4. When conflicting permissions have the same effective priority, the most recent record (by `created_at`, or the order provided by the manager) wins.
    - If you rely on DB timestamps or insertion order, ensure `fetch_user_access` returns results in the expected order (Enabling `require_sorted_permissions` rises an exception if the sorting is wrong).
 
@@ -182,6 +198,7 @@ class RBACParamGuard(ParamGuard):
 - **Log** concise check summaries at debug level (do not log tokens or sensitive data).
 - **Avoid overusing `explicit: true`** - it can silently block wildcard inheritance causing confusing denials.
 - **Cache** `Access` per-request (e.g., in `request.state`) or use ParamGuard to prevent multiple DB hits in the same request.
+- **Be careful with wildcards**: Always keep in mind that wildcards override **EVERYTHING** and they don't care about higher-priority roles and permissions
 ---
 
 ---

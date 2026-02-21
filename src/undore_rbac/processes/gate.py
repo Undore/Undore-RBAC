@@ -1,10 +1,10 @@
 from functools import cached_property
-from typing import Union, Any
+from typing import Union, Any, Sequence
 
 from ascender.core.di.injectfn import inject
-from starlette.requests import Request
 
 from undore_rbac.base_manager import Access
+from undore_rbac.exceptions import InsufficientPermissions
 from undore_rbac.interfaces.config import RBACConfig
 from undore_rbac.interfaces.permissions import IRBACPermission, IRBACRole, IRawRBACPermission, IRBACChildPermission
 from undore_rbac.services.rbac_service import RbacService
@@ -40,6 +40,13 @@ class RBACGate:
 
     @classmethod
     async def from_user_id(cls, user_id: Any, custom_meta: dict | None = None) -> "RBACGate":
+        """
+        Initialize RBACGate from user_id
+        Calls rbac_manager.fetch_user_access(user_id, custom_meta)
+
+        :param user_id: User id to check permissions for
+        :param custom_meta: Custom meta to be passed to the fetch_user_access in your RBAC Manager
+        """
         if isinstance(cls.rbac_service, RbacService):
             rbac_service = cls.rbac_service
         else:
@@ -56,6 +63,12 @@ class RBACGate:
 
     @classmethod
     def from_access(cls, access: Access) -> "RBACGate":
+        """
+        Initialize RBACGate from Access dict manually
+        Does not make any database requests. Use with caution
+
+        :param access: Access data for given user
+        """
         if isinstance(cls.rbac_service, RbacService):
             rbac_service = cls.rbac_service
         else:
@@ -68,16 +81,24 @@ class RBACGate:
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
     @cached_property
-    def user_roles(self) -> dict[str, IRBACRole]:
+    def user_roles(self) -> list[IRBACRole]:
+        """
+        Get user roles, which are cached when initializing
+        Does not make any database requests
+        :return: Dict of [roleId, IRBACRole]
+        """
+        return self.__user_roles
+
+    @cached_property
+    def user_roles_dict(self) -> dict[Any, IRBACRole]:
         """
         Get user roles in pairs of id and role
-
         Calculated only once to save performance. Use update_overrides to update this.
+        Does not make any database requests
 
         :return: Dict of [roleId, IRBACRole]
         """
         return {i.id: i for i in self.__user_roles}
-
 
     def update_overrides(self, *, user_permissions: Union[list[IRBACPermission], False], user_roles: Union[list[IRBACRole], False]) -> None:
         """
@@ -116,9 +137,13 @@ class RBACGate:
         1. Child permissions: Permissions, defined as child permissions in RBAC Map for parent permission, which user has
         2. Role (shared) permissions: Ones with the highest role priority are the last, if same - last one is the newest
         3. User permissions
-        Last permissions override previous, so user permissions are the highest priority and child permissions are the lowest (priority)
+        4. Wildcards (* permissions/overrides)
+
+        Last permissions override previous, so user permissions are the highest priority (after wildcards) and child permissions are the lowest (priority)
         The higher is group priority, the more important it is (in sense of overrides)
-        Also keep in mind, that overrides (* permissions) are generally more important than normal ones and can override their value
+
+        Also keep in mind, that overrides (* permissions) are generally more important than normal ones and can override their value,
+        REGARDLESS of their priority. So, wildcard role permission WILL override normal user permission, but a user wildcard can override it
 
         Calculated only once to save performance. Use update_overrides to update this.
 
@@ -148,7 +173,7 @@ class RBACGate:
                 raise ValueError(
                     f"Invalid permission id={permission.id}. Permission must have either user_id or role_id")
 
-        shared_permissions.sort(key=lambda permission: self.user_roles[permission.role_id].priority)
+        shared_permissions.sort(key=lambda permission: self.user_roles_dict[permission.role_id].priority)
         # Make shared permissions arrange from the lowest role priority to highest
 
         scoped_permissions_copy = scoped_permissions.copy()
@@ -173,44 +198,53 @@ class RBACGate:
 
         return permissions_sorted
 
-    def check_access(self, required_permissions: str | list[str]) -> bool:
+    def _check_overrides(self, check_permission: str) -> bool | None:
+        override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
+        return self.__check_permission_overriding(check_permission, override_permissions)
+
+    def check_access(self, required_permissions: str | Sequence[str], auto_error: bool = True) -> tuple[bool, IRawRBACPermission | None]:
         """
         Checks if user has specific permission(s).
         Takes overrides, values, roles, permission configs and priorities into account
-        If at least one fails, returns False
-        If at least one succeeds, returns True
-        Otherwise returns False
+        If at least one fails, raise error or return False status
+        If all succeed, grant access and return True status
+
+        Status is a bool, signifying if user was granted access or not.
+
+        Reason is an IRawRBACPermission, being missing permission because of which access was denied (if it was)
 
         :raises ValueError: If permission is not present in RBAC Map
+        :raises InsufficientPermissions: If auto_error is True and access is denied
+
+        :param auto_error: If True, will raise InsufficientPermissions if missing permissions
         :param required_permissions: RBAC Permission(s) to check
-        :return: True if access granted, otherwise False
+        :return: Tuple of [Status, Reason]
         """
-        rp = required_permissions if isinstance(required_permissions, list) else [required_permissions]
+        rp = list(required_permissions)
 
         for check_permission in rp:
             # noinspection PyTypeChecker
             if not (_permission := self.rbac_map.find(check_permission)):
                 raise ValueError(f"Permission {check_permission} is not present in RBAC Map")
 
-            _permission: IRawRBACPermission
-
             if not _permission.config.explicit:
                 # Do not check overrides, if explicit permission
 
-                override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
-
-                override = self.__check_permission_overriding(check_permission, override_permissions)
-                if override is not None:
-                    if override is False:
-                        return False
+                override_check = self._check_overrides(check_permission)
+                if override_check is False:
+                    if auto_error:
+                        raise InsufficientPermissions(required_permission=check_permission)
+                elif override_check is True:
                     continue
 
             if self.user_permissions_dict.get(_permission.permission, _permission.config.default):
                 continue
 
-            return False
+            if auto_error:
+                raise InsufficientPermissions(required_permission=check_permission)
+            return False, _permission
 
-        return True
+        return True, None
 
 
     def __check_permission_overriding(self, required_permission: str, overrides: list[tuple[str, bool]]) -> bool | None:

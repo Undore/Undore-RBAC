@@ -1,10 +1,10 @@
 from ascender.guards import Guard
 from fastapi import Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from typing_extensions import deprecated
 
+from undore_rbac.exceptions import InsufficientPermissions
 from undore_rbac.services.rbac_service import RbacService
-
+from undore_rbac.processes.gate import RBACGate
 
 # noinspection PyMethodOverriding
 class RBACGuard(Guard):
@@ -28,8 +28,10 @@ class RBACGuard(Guard):
         Works same as FastAPI's Dependency Injection
         """
         user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
-        return await self.rbac.check_access(request.url.path, user_id, self.permissions, custom_meta={"org_id": 123})
 
-@deprecated("Use RBACGuard Instead. Will soon be removed!")
-class RbacGuard(RBACGuard):
-    pass
+        self.logger.debug(f"[bold cyan]Checking permissions for user id={user_id} on [bold magenta]{request.url.path}")
+
+        gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
+        status, reason = gate.check_access(self.permissions)
+        if status is False:
+            raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
