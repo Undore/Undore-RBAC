@@ -52,9 +52,7 @@ class RBACGate:
         else:
             rbac_service = inject(RbacService)
 
-        rbac_manager = rbac_service.rbac_manager
-
-        user_access = await rbac_manager.fetch_user_access(user_id, custom_meta=custom_meta)
+        user_access = await rbac_service.manager.fetch_user_access(user_id, custom_meta=custom_meta)
         user_roles: list[IRBACRole] = user_access['roles']
         user_permissions: list[IRBACPermission] = user_access['permissions']
         user: Any | None = user_access['user']
@@ -173,11 +171,11 @@ class RBACGate:
                 raise ValueError(
                     f"Invalid permission id={permission.id}. Permission must have either user_id or role_id")
 
-        shared_permissions.sort(key=lambda permission: self.user_roles_dict[permission.role_id].priority)
+        shared_permissions.sort(key=lambda _permission: self.user_roles_dict[_permission.role_id].priority)
         # Make shared permissions arrange from the lowest role priority to highest
 
         scoped_permissions_copy = scoped_permissions.copy()
-        scoped_permissions.sort(key=lambda permission: permission.created_at, reverse=True)
+        scoped_permissions.sort(key=lambda _permission: _permission.created_at, reverse=True)
 
         if scoped_permissions_copy != scoped_permissions:
             if self.config.require_sorted_permissions:
@@ -235,7 +233,7 @@ class RBACGate:
                     if auto_error:
                         raise InsufficientPermissions(required_permission=check_permission)
                 elif override_check is True:
-                    continue
+                    continue  # Do not step further if override check is successful
 
             if self.user_permissions_dict.get(_permission.permission, _permission.config.default):
                 continue

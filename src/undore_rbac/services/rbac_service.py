@@ -34,10 +34,21 @@ class RbacService(Service):
 
         self.handler: RbacExceptionHandlerService = inject("ExceptionHandler")
 
-        self.rbac_manager: BaseRBACManager = config.rbac_manager
+        self.__manager: BaseRBACManager = config.rbac_manager
         self.rbac_map = RBACMap(self.config.rbac_map_path)
 
         self.application.app.add_event_handler("startup", self.on_startup)
+
+    @property
+    def manager(self) -> BaseRBACManager:
+        return self.__manager
+
+    @property
+    def rbac_manager(self) -> BaseRBACManager:
+        """
+        Old format fallback
+        """
+        return self.__manager
 
     def on_startup(self):
         self.logger = init_logger(self.config.log_level)

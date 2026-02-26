@@ -45,7 +45,7 @@ class RbacExceptionHandlerService(Service):
             pass
 
         if token:
-            user_id = await rbac.rbac_manager.authorize(token, request=request)
+            user_id = await rbac.manager.authorize(token, request=request)
 
         self.logger.info(f"[bold red]RBAC Exception handled{' for user id={}'.format(user_id) if user_id else ''}[/bold red]: [yellow]{exc}")  # War crime
 

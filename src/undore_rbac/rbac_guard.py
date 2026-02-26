@@ -27,7 +27,7 @@ class RBACGuard(Guard):
         """
         Works same as FastAPI's Dependency Injection
         """
-        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
+        user_id = await self.rbac.manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
 
         self.logger.debug(f"[bold cyan]Checking permissions for user id={user_id} on [bold magenta]{request.url.path}")
 
@@ -35,3 +35,5 @@ class RBACGuard(Guard):
         status, reason = gate.check_access(self.permissions)
         if status is False:
             raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
+
+        self.logger.info(f"[green]Access granted for user id={user_id}")

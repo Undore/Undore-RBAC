@@ -126,24 +126,26 @@ appBootstrap: IBootstrap = {
 
 ---
 
-> **Note:** Refer official `Ascender Framework` docs for `Guard` and `ParamGuard` endpoint usage examples 
+> **Note:** Refer to official `Ascender Framework` docs for `Guard` and `ParamGuard` endpoint usage examples 
 
 ---
+
 ```py
 class RBACGuard(Guard):
-    def __init__(self, *permissions: str):
-        self.permissions = permissions
+   def __init__(self, *permissions: str):
+      self.permissions = permissions
 
-    def __post_init__(self, rbac: RbacService):
-        self.rbac = rbac
+   def __post_init__(self, rbac: RbacService):
+      self.rbac = rbac
+      self.manager = rbac.manager
 
-     async def can_activate(self, request: Request, token: HTTPAuthorizationCredentials = Security(HTTPBearer())):
-        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
-        
-        gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
-        status, reason = gate.check_access(self.permissions)
-        if status is False:
-            raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
+   async def can_activate(self, request: Request, token: HTTPAuthorizationCredentials = Security(HTTPBearer())):
+      user_id = await self.manager.authorize(token.credentials, request=request, custom_meta={"org_id": 123})
+
+      gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
+      status, reason = gate.check_access(self.permissions)
+      if status is False:
+         raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
 
 ```
 
@@ -156,9 +158,10 @@ class RBACParamGuard(ParamGuard):
 
     def __post_init__(self, rbac: RbacService):
         self.rbac = rbac
+        self.manager = rbac.manager
 
     async def credentials_guard(self, request: Request, token: HTTPAuthorizationCredentials = Security(HTTPBearer())):
-        user_id = await self.rbac.rbac_manager.authorize(token.credentials, request=request)
+        user_id = await self.manager.authorize(token.credentials, request=request)
         
         if self.permissions:
            gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
