@@ -15,7 +15,7 @@ class RBACMap(list):
         Reads and flattens permission map
         :param map_path: Path to rbac_map.yml file
         """
-        permission_map = DEFAULT_RBAC_MAP | YAMLReader.read_yaml(map_path)
+        permission_map = DEFAULT_RBAC_MAP | (YAMLReader.read_yaml(map_path) or {})
         self.__validate_permissions(permission_map)
 
         permissions = self.__flatten_permissions(permission_map)
