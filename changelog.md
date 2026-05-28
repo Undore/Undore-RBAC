@@ -1,5 +1,8 @@
+# Undore RTBAC 1.2.1 changelog
+Updated to Ascender version 1.2.1b1
+
 # Undore RBAC 1.2 Changelog
-This is a major version, because a lot of architecture got changed
+This is a major version. Architecture got changed quite a bit
 
 ## RBACService deprecation
 I considered it useless and improved `RBACGate` functionality instead:
