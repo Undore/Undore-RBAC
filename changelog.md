@@ -1,6 +1,3 @@
-# Undore RTBAC 1.2.1 changelog
-Updated to Ascender version 1.2.1b1
-
 # Undore RBAC 1.2 Changelog
 This is a major version. Architecture got changed quite a bit
 
@@ -14,5 +11,6 @@ I considered it useless and improved `RBACGate` functionality instead:
 - `RbacGuard` (Not to be confused with `RBACGuard`) got **removed**
 - `InsufficientPermissions` is now less dependent on FastAPI, not requiring request_url
 - Applied all changes to docs and reworked example RBACGuard
+- Updated to ascender 1.2.1b1 (in v1.2.4)
 
 ### Thank you for your feedback. I'm looking forward to adding new features soon
