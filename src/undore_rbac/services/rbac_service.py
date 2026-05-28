@@ -4,7 +4,7 @@ from logging import Logger
 from typing import Sequence, TYPE_CHECKING
 
 from ascender.common import Injectable
-from ascender.core import Service
+from ascender.core import Service, LifecycleService
 from ascender.core.applications.application import Application
 from ascender.core.di.injectfn import inject
 from typing_extensions import deprecated
@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
 
 @Injectable()
-class RbacService(Service):
+class RbacService(LifecycleService):
     """
     RBACService is not very useful right now, but I'll get to it
     """
@@ -50,8 +50,11 @@ class RbacService(Service):
         """
         return self.__manager
 
-    def on_startup(self):
+    async def on_startup(self):
         self.logger = init_logger(self.config.log_level)
+
+    async def on_shutdown(self):
+        pass
 
     @deprecated("Use gate.check_access instead")
     async def check_access(self, request_url: str, user_id: str, permissions: list[str], custom_meta: dict | None = None) -> RBACGate:
