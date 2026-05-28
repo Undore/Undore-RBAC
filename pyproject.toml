@@ -12,7 +12,6 @@ packages = [{include="undore_rbac", from="src"}]
 python = ">=3.11,<3.14"
 pyyaml = "^6.0.2"
 pyjwt = "^2.12.0"
-ascender = "^0.2.0"
 packaging = "^26.0"
 ascender-framework = "^2.1.1b1"
 pytz = "^2025.2"
