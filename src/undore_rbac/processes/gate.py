@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Union, Any, Sequence
+from typing import Union, Any, Sequence, Literal
 
 from ascender.core.di.injectfn import inject
 
@@ -98,7 +98,7 @@ class RBACGate:
         """
         return {i.id: i for i in self.__user_roles}
 
-    def update_overrides(self, *, user_permissions: Union[list[IRBACPermission], False], user_roles: Union[list[IRBACRole], False]) -> None:
+    def update_overrides(self, *, user_permissions: Union[list[IRBACPermission], Literal[False]], user_roles: Union[list[IRBACRole], Literal[False]]) -> None:
         """
         Update permissions and roles read-only attributes
 
@@ -114,8 +114,6 @@ class RBACGate:
         self.__user_permissions = user_permissions
         del self.user_roles
         del self.user_permissions
-
-        # TODO: TEST THIS
 
     @cached_property
     def user_permissions_dict(self) -> dict[str, bool]:
@@ -148,20 +146,19 @@ class RBACGate:
         :raises ValueError: If permission is invalid
         :return: Dict of [permission, value]
         """
-
-        scoped_permissions: list[IRBACPermission] = []
-        shared_permissions: list[IRBACPermission] = []
         child_permissions: list[IRBACChildPermission] = []
+        shared_permissions: list[IRBACPermission] = []
+        scoped_permissions: list[IRBACPermission] = []
 
         for permission in self.__user_permissions:
-            permission: IRBACPermission
+            map_permission = self.rbac_map.find(permission.permission.removesuffix(".*"))
 
-            map_permission = self.rbac_map.find(permission.permission)
-            if not map_permission and not permission.permission.endswith("*"):
+            if not map_permission and permission.permission != "*":
                 raise ValueError(f"Permission {permission.permission} not found in RBAC Map")
-            elif map_permission:
-                if map_permission.config.children is not None and permission.value is True:
-                    child_permissions.extend(map_permission.config.children)
+
+            if map_permission and map_permission.config.children and permission.value is True:
+                # map_permission is None for "*"
+                child_permissions.extend(map_permission.config.children)
 
             if permission.user_id:
                 scoped_permissions.append(permission)
@@ -169,32 +166,36 @@ class RBACGate:
                 shared_permissions.append(permission)
             else:
                 raise ValueError(
-                    f"Invalid permission id={permission.id}. Permission must have either user_id or role_id")
+                    f"Invalid permission id={permission.id}. Must have user_id or role_id"
+                )
 
-        shared_permissions.sort(key=lambda _permission: self.user_roles_dict[_permission.role_id].priority)
-        # Make shared permissions arrange from the lowest role priority to highest
 
-        scoped_permissions_copy = scoped_permissions.copy()
-        scoped_permissions.sort(key=lambda _permission: _permission.created_at, reverse=True)
+        shared_permissions.sort(
+            key=lambda p: self.user_roles_dict[p.role_id].priority
+        )
+        original_scoped_permissions = scoped_permissions.copy()
+        scoped_permissions.sort(key=lambda p: p.created_at, reverse=True)
 
-        if scoped_permissions_copy != scoped_permissions:
-            if self.config.require_sorted_permissions:
-                raise RuntimeError("IRBACPermissions must be sorted by created_at (Newer ones first). Please, implement this in your manager "
-                                   "\nYou can disable this requirement in config. See RBACConfig docs for details")
+        if self.config.require_sorted_permissions:
+            if original_scoped_permissions != sorted(original_scoped_permissions, key=lambda p: p.created_at,
+                                                     reverse=True):
+                raise RuntimeError(
+                    "list[IRBACPermission] must be sorted by created_at (Newest ones first). Please, implement this in your manager " 
+                    "\nYou can disable this requirement in config. See RBACConfig docs for details"
+                )
 
-        permissions_sorted: list[tuple[str, bool]] = []
+        result: dict[str, bool] = {}
 
-        # Combine and override all permissions with the highest priority values
-        for permission in child_permissions + shared_permissions + scoped_permissions:
-            permission: IRBACPermission
+        def apply(perms):
+            for p in perms:
+                result[p.permission] = p.value  # override by last write wins
 
-            raw_permissions = [i[0] for i in permissions_sorted]
-            if permission.permission in raw_permissions:
-                continue
+        # lowest -> highest importance
+        apply(child_permissions)
+        apply(shared_permissions)
+        apply(scoped_permissions)
 
-            permissions_sorted.append((permission.permission, permission.value))
-
-        return permissions_sorted
+        return list(result.items())
 
     def _check_overrides(self, check_permission: str) -> bool | None:
         override_permissions = [i for i in self.user_permissions if i[0].endswith("*")]
@@ -218,10 +219,23 @@ class RBACGate:
         :param required_permissions: RBAC Permission(s) to check
         :return: Tuple of [Status, Reason]
         """
-        rp = list(required_permissions)
+        if isinstance(required_permissions, str):
+            rp = [required_permissions]
+        else:
+            rp = list(required_permissions)
 
         for check_permission in rp:
             # noinspection PyTypeChecker
+            if check_permission.endswith("*"):
+                ok, cause = self.check_access([i.permission for i in self.rbac_map.find_children_flattened(check_permission)],
+                                              auto_error=False)
+                if ok:
+                    continue
+
+                if auto_error:
+                    raise InsufficientPermissions(required_permission=cause.permission if cause else None)
+                return False, cause
+
             if not (_permission := self.rbac_map.find(check_permission)):
                 raise ValueError(f"Permission {check_permission} is not present in RBAC Map")
 
@@ -260,6 +274,10 @@ class RBACGate:
         overrides = ["users.*", "moderation.*"]
         Result: True (Because users.* covers users.view)
 
+        permission = users
+        overrides = ["users.*", "moderation.*"]
+        Result: True (Because users.* covers users)
+
         :param required_permission: Original permission
         :param overrides: Permission overrides (permissions ending with *). List of tuples of [RawPermission, Value]
         :raises ValueError: If an override does not end with *
@@ -273,7 +291,7 @@ class RBACGate:
                 raise ValueError("Override must end with *")
 
             for p_index, part in enumerate(override.split(".")):
-                if total_permission_parts - 1 < p_index:
+                if total_permission_parts - 1 < p_index and part != "*":
                     # No point in checking further, because override part index is out of range
                     break
 

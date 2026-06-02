@@ -3,8 +3,9 @@ from fastapi import Request, Security
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from undore_rbac.exceptions import InsufficientPermissions
-from undore_rbac.services.rbac_service import RbacService
 from undore_rbac.processes.gate import RBACGate
+from undore_rbac.services.rbac_service import RbacService
+
 
 # noinspection PyMethodOverriding
 class RBACGuard(Guard):
@@ -34,6 +35,6 @@ class RBACGuard(Guard):
         gate = await RBACGate.from_user_id(user_id, custom_meta={"org_id": 123})
         status, reason = gate.check_access(self.permissions)
         if status is False:
-            raise InsufficientPermissions(request_url=request.url.path, required_permission=reason)
+            raise InsufficientPermissions(request_url=request.url.path, required_permission=reason.permission if reason else None)
 
         self.logger.info(f"[green]Access granted for user id={user_id}")

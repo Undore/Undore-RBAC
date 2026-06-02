@@ -5,7 +5,7 @@ from undore_rbac.utils.yaml_reader import YAMLReader
 # TODO: ADD FOLDER MAPS SUPPORT
 
 
-class RBACMap(list):
+class RBACMap(list[IRawRBACPermission]):
     """
     RBAC map is a list of permissions, collected from YAML rbac_map file.
     It contains converted and parsed via YAMLReader values
@@ -51,9 +51,9 @@ class RBACMap(list):
                 config_data = value["_config"]
 
                 if config_data is not None and not isinstance(config_data, dict):
-                    raise TypeError(f"{full_key}.{'_config'} must be a mapping")
+                    raise TypeError(f"{full_key}._config must be a mapping")
 
-                config = IRawRBACPermissionConfig.from_rbac_map(**config_data)
+                config = IRawRBACPermissionConfig.from_rbac_map(**(config_data or {}))
             else:
                 config = IRawRBACPermissionConfig()
 
@@ -71,10 +71,10 @@ class RBACMap(list):
     def append(self, permission: str):
         raise ValueError("RBACMap is read-only")
 
-    def pop(self, __index: int = -1):
+    def pop(self, *args, **kwargs):
         raise ValueError("RBACMap is read-only")
 
-    def insert(self, __index: int, __object):
+    def insert(self, *args, **kwargs):
         raise ValueError("RBACMap is read-only")
 
     def extend(self, __object):
@@ -84,3 +84,20 @@ class RBACMap(list):
         result = [i for i in self if i == permission]
 
         return result[0] if result else None
+
+    def find_children_flattened(self, parent_permission: str) -> list[IRawRBACPermission]:
+        parent_permission = parent_permission.removesuffix(".*")
+        children = []
+
+        for permission in self:
+            if permission.config.explicit:
+                continue
+
+            if parent_permission == "*":
+                children.append(permission)
+                continue
+
+            if permission.permission.startswith(parent_permission + "."):
+                children.append(permission)
+
+        return children
