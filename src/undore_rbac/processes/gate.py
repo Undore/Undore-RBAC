@@ -78,6 +78,14 @@ class RBACGate:
 
         return cls(user_permissions=user_permissions, user_roles=user_roles, rbac_map=rbac_service.rbac_map, custom_user=user)
 
+    @property
+    def all_permissions_raw(self) -> list[IRBACPermission]:
+        """
+        Returns all permissions belonging to user.
+        WARNING: DOES NOT PERFORM PRIORITY LOGIC, THEREFORE RAW
+        """
+        return self.__user_permissions
+
     @cached_property
     def user_roles(self) -> list[IRBACRole]:
         """
